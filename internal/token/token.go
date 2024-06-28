@@ -49,14 +49,14 @@ const (
 )
 
 type Token struct {
-	Type   TokenType
-	Liteal string
+	Type    TokenType
+	Literal string
 }
 
 func CreateToken(token TokenType, char byte) Token {
 	return Token{
-		Type:   token,
-		Liteal: string(char),
+		Type:    token,
+		Literal: string(char),
 	}
 }
 

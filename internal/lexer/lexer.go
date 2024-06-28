@@ -44,16 +44,16 @@ func (l *Lexer) NextToken() token.Token {
 	case '*':
 		tok = token.CreateToken(token.ASTERIK, '*')
 	case 0:
-		tok.Liteal = ""
+		tok.Literal = ""
 		tok.Type = token.EOF
 	default:
 		if isLetter(l.ch) {
-			tok.Liteal = l.readIdentifer()
-			tok.Type = token.LookupIdent(tok.Liteal)
+			tok.Literal = l.readIdentifer()
+			tok.Type = token.LookupIdent(tok.Literal)
 			return tok
 		} else if isDigit(l.ch) {
 			tok.Type = token.INT
-			tok.Liteal = l.readNumber()
+			tok.Literal = l.readNumber()
 			return tok
 		} else {
 			tok = token.CreateToken(token.ILLEGAL, l.ch)

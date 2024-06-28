@@ -30,8 +30,8 @@ func TestOne(t *testing.T) {
 			t.Fatalf("test [%d] expected %q got %q", i, tt.expectedType, tok.Type)
 		}
 
-		if tok.Liteal != tt.expedtedLiteral {
-			t.Fatalf("expected [%s] got [%s]", tt.expedtedLiteral, tok.Liteal)
+		if tok.Literal != tt.expedtedLiteral {
+			t.Fatalf("expected [%s] got [%s]", tt.expedtedLiteral, tok.Literal)
 		}
 	}
 }
