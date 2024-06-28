@@ -19,10 +19,10 @@ func TestOne(t *testing.T) {
 		{token.SEMICOLON, ";"},
 	}
 
-	l := NewLexer(input)
+	lexer := New(input)
 
 	for i, tt := range tests {
-		tok := l.NextToken()
+		tok := lexer.NextToken()
 
 		t.Logf("getting [%q] expecting [%q]", tok.Type, tt.expectedType)
 
