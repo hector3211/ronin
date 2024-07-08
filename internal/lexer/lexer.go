@@ -11,11 +11,11 @@ type Lexer struct {
 
 func New(input string) *Lexer {
 	l := &Lexer{input: input}
-	l.Walk()
+	l.ReadChar()
 	return l
 }
 
-func (l *Lexer) Walk() {
+func (l *Lexer) ReadChar() {
 	if l.readPosition >= len(l.input) {
 		l.ch = 0
 	} else {
@@ -59,14 +59,14 @@ func (l *Lexer) NextToken() token.Token {
 			tok = token.CreateToken(token.ILLEGAL, l.ch)
 		}
 	}
-	l.Walk()
+	l.ReadChar()
 	return tok
 }
 
 func (l *Lexer) readNumber() string {
 	position := l.position
 	for isDigit(l.ch) {
-		l.Walk()
+		l.ReadChar()
 	}
 
 	return l.input[position:l.position]
@@ -75,7 +75,7 @@ func (l *Lexer) readNumber() string {
 func (l *Lexer) readIdentifer() string {
 	position := l.position
 	for isLetter(l.ch) {
-		l.Walk()
+		l.ReadChar()
 	}
 
 	return l.input[position:l.position]
@@ -83,7 +83,7 @@ func (l *Lexer) readIdentifer() string {
 
 func (l *Lexer) skipWhiteSpaces() {
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
-		l.Walk()
+		l.ReadChar()
 	}
 }
 
