@@ -3,6 +3,7 @@ package ast
 import (
 	"bytes"
 	"fmt"
+	"sql-parser/internal/lexer"
 	"sql-parser/internal/token"
 )
 
@@ -20,26 +21,24 @@ type InsertStatement struct {
 }
 
 type Ast struct {
+	l            *lexer.Lexer
 	Statements   []token.Token
 	position     int
 	currentToken token.Token
+	peekToken    token.Token
 }
 
-func NewAst(tokens []token.Token) *Ast {
+func NewAst(l *lexer.Lexer, tokens []token.Token) *Ast {
 	return &Ast{
+		l:          l,
 		Statements: tokens,
 		position:   0,
 	}
 }
 
 func (a *Ast) NextToken() {
-	if a.position >= len(a.Statements) {
-		a.currentToken = token.CreateToken(token.EOF, 0)
-		return
-	}
-
-	a.currentToken = a.Statements[a.position]
-	a.position += 1
+	a.currentToken = a.peekToken
+	a.peekToken = a.l.NextToken()
 }
 
 func (a *Ast) Parse() (Node, error) {
@@ -59,27 +58,24 @@ func (a *Ast) parseSelect() (Node, error) {
 	stmt := &SelectStatement{}
 	a.NextToken()
 
-	if a.currentToken.Type == token.ASTERIK {
-		stmt.Fields = append(stmt.Fields, "*")
+	for a.currentToken.Type != token.SEMICOLON {
+		if a.currentToken.Type == token.ASTERIK {
+			stmt.Fields = append(stmt.Fields, a.currentToken.Literal)
+			a.NextToken()
+		}
+		if a.currentToken.Type == token.LPAREN {
+			curr := a.currentToken
+			for curr.Type != token.RPAREN {
+				if curr.Type != token.COMMA {
+					stmt.Fields = append(stmt.Fields, curr.Literal)
+				}
+				a.NextToken()
+			}
+		}
+		if a.currentToken.Type == token.IDENT {
+			stmt.TableName = a.currentToken.Literal
+		}
 		a.NextToken()
-	} else {
-		return nil, fmt.Errorf("Expected *, got %s", a.currentToken.Literal)
-	}
-
-	if a.currentToken.Type != token.FROM {
-		return nil, fmt.Errorf("Expected FROM, got %s", a.currentToken.Literal)
-	}
-
-	a.NextToken()
-
-	if a.currentToken.Type != token.IDENT {
-		return nil, fmt.Errorf("Expected table name, got %s", a.currentToken.Literal)
-	}
-	stmt.TableName = a.currentToken.Literal
-	a.NextToken()
-
-	if a.currentToken.Type != token.SEMICOLON {
-		return nil, fmt.Errorf("Expected SEMICOLON , got %s", a.currentToken.Literal)
 	}
 
 	return stmt, nil
@@ -142,9 +138,19 @@ func (a *Ast) String() string {
 
 func stringifySelectSatement(tokens []token.Token) string {
 	stmt := ""
+	multipleSelects := false
+
 	for _, tok := range tokens {
 		stmt += tok.Literal
-		if tok.Type != token.IDENT && tok.Type != token.SEMICOLON && tok.Type != token.COMMA {
+		if tok.Type == token.LPAREN {
+			multipleSelects = true
+		}
+
+		if tok.Type == token.RPAREN {
+			multipleSelects = false
+		}
+
+		if !multipleSelects && tok.Type != token.IDENT && tok.Type != token.SEMICOLON {
 			stmt += " "
 		}
 	}
@@ -153,15 +159,15 @@ func stringifySelectSatement(tokens []token.Token) string {
 
 func stringifyInsertSatement(tokens []token.Token) string {
 	stmt := ""
-	multiInserts := false
+	multipleInserts := false
 
 	for _, tok := range tokens {
 		stmt += tok.Literal
 		if tok.Type == token.LPAREN {
-			multiInserts = true
+			multipleInserts = true
 		}
 
-		if !multiInserts {
+		if !multipleInserts {
 			stmt += " "
 		}
 
